@@ -32,6 +32,7 @@
 
     <modules>
         <module>odar-mysql-connector</module>
+        <module>odar-redis-connector</module>
     </modules>
 
     <organization>
