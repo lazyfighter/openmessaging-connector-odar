@@ -1,5 +1,6 @@
 package io.messaging.redis.sync;
 
+import com.moilioncircle.redis.replicator.Configuration;
 import com.moilioncircle.redis.replicator.RedisReplicator;
 import com.moilioncircle.redis.replicator.RedisURI;
 import com.moilioncircle.redis.replicator.Status;
@@ -16,22 +17,25 @@ public class EventProcessor {
 
     private RedisConnectorReplicator redisConnectorReplicator;
 
+    private Configuration configuration;
+
     private final RedisSyncEventListener redisSyncEventListener;
     private final RedisSyncCloseListner redisSyncCloseListner;
     private final RedisSyncExceptionListener redisSyncExceptionListener;
 
 
-    public EventProcessor(RedisConnectorReplicator redisConnectorReplicator) {
+    public EventProcessor(RedisConnectorReplicator redisConnectorReplicator) throws Exception {
         this.redisConnectorReplicator = redisConnectorReplicator;
         this.config = redisConnectorReplicator.getConfig();
+        this.redisReplicator = initRedisReplicator();
+        this.configuration = redisReplicator.getConfiguration();
         this.redisSyncEventListener = new RedisSyncEventListener(this);
         this.redisSyncCloseListner = new RedisSyncCloseListner(this);
         this.redisSyncExceptionListener = new RedisSyncExceptionListener(this);
+        this.setReplOffset(-1);
     }
 
     public void start() throws Exception {
-
-        this.redisReplicator = initRedisReplicator();
 
         this.redisReplicator.addEventListener(redisSyncEventListener);
 
@@ -49,6 +53,15 @@ public class EventProcessor {
         return replicator;
     }
 
+
+    public void setReplOffset(long replOffset) {
+
+        if (replOffset < 0) {
+            replOffset = 0;
+        }
+        configuration.setReplOffset(replOffset);
+    }
+
     public boolean isConnected() {
         if (this.redisReplicator == null) {
             return false;
@@ -58,5 +71,9 @@ public class EventProcessor {
             return true;
         }
         return false;
+    }
+
+    public void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
     }
 }
